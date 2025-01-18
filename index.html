@@ -3,24 +3,262 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DisasterSafe - Emergency Management System</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <title>DisasterSafe - Emergency Management System</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary-color: #e53e3e;
+            --secondary-color: #4299e1;
+            --dark-color: #2d3748;
+            --light-color: #f7fafc;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f6f8fc 0%, #e9ecef 100%);
+        }
+
+        /* Header Styles */
+        .header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-button {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: transparent;
+        }
+
+        .nav-button:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .nav-button.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        /* Main Content Styles */
+        .main-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .alert-banner {
+            background: linear-gradient(to right, var(--primary-color), #ed8936);
+            color: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .weather-widget {
+            background: linear-gradient(to right, var(--secondary-color), #63b3ed);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .weather-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .weather-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .emergency-contact {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .contact-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .contact-info h3 {
+            color: var(--dark-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .contact-info p {
+            color: var(--primary-color);
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+
+        /* Footer Styles */
+        .footer {
+            background: linear-gradient(to right, #1a202c, #2d3748);
+            color: white;
+            padding: 3rem 0;
+            margin-top: 3rem;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+
+        .footer-section h3 {
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section ul li {
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .footer-section ul li:hover {
+            color: var(--secondary-color);
+        }
+
+        /* Loading Animation */
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .loading.hide {
+            display: none;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-container {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+        }
         #risk-map {
             height: 600px;
             width: 100%;
             border-radius: 8px;
         }
-
+    
         .legend {
             background: white;
             padding: 10px;
             border-radius: 5px;
             box-shadow: 0 0 15px rgba(0,0,0,0.2);
         }
-
+    
         .legend i {
             width: 18px;
             height: 18px;
@@ -28,7 +266,7 @@
             margin-right: 8px;
             opacity: 0.7;
         }
-
+    
         .risk-info {
             padding: 6px 8px;
             background: white;
@@ -38,106 +276,382 @@
     </style>
 </head>
 <body>
-    <div class="card" style="grid-column: 1/-1;">
-        <h2>Disaster Risk Map</h2>
-        <p class="mb-4">Interactive map showing disaster-prone areas and current risk levels. You can search for cities and view detailed risk zones.</p>
-        <div id="risk-map"></div>
+    <!-- Loading Screen -->
+    <div class="loading">
+        <div class="spinner"></div>
     </div>
 
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav-container">
+            <div class="logo">
+                🚨 DisasterSafe
+            </div>
+            <div class="nav-links">
+                <button class="nav-button active" data-tab="home">Home</button>
+                <button class="nav-button" data-tab="contacts">Emergency Contacts</button>
+                <button class="nav-button" data-tab="predictions">Predictions</button>
+                <button class="nav-button" data-tab="safety">Safety Tips</button>
+                <button class="nav-button" data-tab="map">Risk Map</button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-container">
+        <!-- Alert Banner -->
+        <div class="alert-banner">
+            <span>⚠️</span>
+            <div>
+                <h3>Emergency Alert System</h3>
+                <p>Stay informed about natural disasters and emergency situations in your area.</p>
+            </div>
+        </div>
+
+        <!-- Weather Widget -->
+        <div class="weather-widget">
+            <h2>Current Weather</h2>
+            <div class="weather-grid">
+                <div class="weather-item">
+                    🌡️ Temperature: 28°C
+                </div>
+                <div class="weather-item">
+                    💧 Humidity: 65%
+                </div>
+                <div class="weather-item">
+                    💨 Wind: 12 km/h
+                </div>
+                <div class="weather-item">
+                    ☔ Rainfall: 0 mm
+                </div>
+            </div>
+        </div>
+
+        <!-- Dynamic Content Container -->
+        <div id="content" class="card-grid">
+            <!-- Content will be loaded dynamically -->
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li>About Us</li>
+                    <li>Emergency Services</li>
+                    <li>Contact</li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Resources</h3>
+                <ul>
+                    <li>Disaster Preparedness</li>
+                    <li>Recovery Support</li>
+                    <li>Training Programs</li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Connect With Us</h3>
+                <ul>
+                    <li>Facebook</li>
+                    <li>Twitter</li>
+                    <li>Instagram</li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Newsletter</h3>
+                <p>Subscribe to our newsletter for updates and alerts.</p>
+            </div>
+        </div>
+    </footer>
+
     <script>
-        // Initialize the map
-        function initMap() {
-            const map = L.map('risk-map').setView([20.5937, 78.9629], 5); // Centered on India
+        // Loading Screen
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.querySelector('.loading').classList.add('hide');
+            }, 1500);
+        });
 
-            // Add tile layer
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
+        // Tab Navigation
+        const tabs = document.querySelectorAll('.nav-button');
+        const contentContainer = document.getElementById('content');
 
-            // Define risk zones data with more details
-            const riskZones = [
-                {
-                    center: [19.0760, 72.8777], // Mumbai
-                    radius: 50000,
-                    risk: 'high',
-                    type: 'Flood Risk Zone',
-                    details: 'High risk of flooding during monsoon season',
-                    additionalRisks: ['Cyclone Risk', 'High Air Pollution'],
-                    facilities: ['Mumbai Emergency Response Center']
-                },
-                {
-                    center: [28.7041, 77.1025], // Delhi
-                    radius: 40000,
-                    risk: 'medium',
-                    type: 'Air Quality Risk Zone',
-                    details: 'Moderate to high air pollution levels',
-                    additionalRisks: ['Heatwave Risk', 'Earthquake Risk'],
-                    facilities: ['Delhi Disaster Management Office']
-                },
-                {
-                    center: [13.0827, 80.2707], // Chennai
-                    radius: 45000,
-                    risk: 'high',
-                    type: 'Cyclone Risk Zone',
-                    details: 'High risk of cyclones during season',
-                    additionalRisks: ['Flood Risk', 'Storm Surge Risk'],
-                    facilities: ['Chennai Relief Center']
-                },
-                {
-                    center: [22.5726, 88.3639], // Kolkata
-                    radius: 35000,
-                    risk: 'medium',
-                    type: 'Flood Risk Zone',
-                    details: 'Moderate risk of urban flooding',
-                    additionalRisks: ['Cyclone Risk'],
-                    facilities: ['Kolkata Disaster Management Center']
-                }
-            ];
-
-            // Add risk zones to the map
-            riskZones.forEach(zone => {
-                const color = zone.risk === 'high' ? '#ff4444' : '#ffa500';
-                const circle = L.circle(zone.center, {
-                    color: color,
-                    fillColor: color,
-                    fillOpacity: 0.2,
-                    radius: zone.radius
-                }).addTo(map);
-
-                circle.bindPopup(`
-                    <div class="risk-info">
-                        <h3>${zone.type}</h3>
-                        <p><strong>Risk Level:</strong> ${zone.risk.toUpperCase()}</p>
-                        <p>${zone.details}</p>
-                        <p><strong>Additional Risks:</strong> ${zone.additionalRisks.join(', ')}</p>
-                        <p><strong>Emergency Facilities:</strong> ${zone.facilities.join(', ')}</p>
+        const content = {
+            home: `
+                <div class="card">
+                    <h2>Emergency Resources</h2>
+                    <p>Access critical emergency resources and contact information.</p>
+                    <button class="nav-button">Learn More</button>
+                </div>
+                <div class="card">
+                    <h2>Early Warning System</h2>
+                    <p>Get real-time alerts and warnings for potential disasters.</p>
+                    <button class="nav-button">Set Up Alerts</button>
+                </div>
+                <div class="card">
+                    <h2>Safety Guidelines</h2>
+                    <p>Learn how to prepare and respond to different types of disasters.</p>
+                    <button class="nav-button">View Guidelines</button>
+                </div>
+            `,
+            contacts: `
+                <div class="card">
+                    <div class="emergency-contact">
+                        <div class="contact-icon">🚓</div>
+                        <div class="contact-info">
+                            <h3>Police</h3>
+                            <p>911</p>
+                        </div>
                     </div>
-                `);
+                </div>
+                <div class="card">
+                    <div class="emergency-contact">
+                        <div class="contact-icon">🚑</div>
+                        <div class="contact-info">
+                            <h3>Ambulance</h3>
+                            <p>112</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="emergency-contact">
+                        <div class="contact-icon">🚒</div>
+                        <div class="contact-info">
+                            <h3>Fire Department</h3>
+                            <p>101</p>
+                        </div>
+                    </div>
+                </div>
+            `,
+            predictions: `
+                <div class="card">
+                    <h2>Weather Forecast</h2>
+                    <div class="weather-grid">
+                        <p>Heavy rainfall expected in the next 48 hours.</p>
+                        <p>Prepare for possible flooding in low-lying areas.</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <h2>Earthquake Risk Assessment</h2>
+                    <p>Current risk level: Moderate</p>
+                </div>
+            `,
+            safety: `
+                <div class="card">
+                    <h2>Earthquake Safety</h2>
+                    <ul>
+                        <li>Drop, Cover, and Hold On</li>
+                        <li>Stay away from windows</li>
+                        <li>Have an emergency kit ready</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h2>Flood Safety</h2>
+                    <ul>
+                        <li>Move to higher ground</li>
+                        <li>Don't drive through floods</li>
+                        <li>Keep important documents safe</li>
+                    </ul>
+                </div>
+            `,
+            map: `
+                
+            `
+        };
+
+        function setActiveTab(tabId) {
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.dataset.tab === tabId) {
+                    tab.classList.add('active');
+                }
             });
-
-            // Add search functionality
-            const geocoder = L.Control.Geocoder.nominatim();
-            const searchControl = new L.Control.Geocoder({
-                geocoder: geocoder
-            }).addTo(map);
-
-            // Add legend
-            const legend = L.control({ position: 'bottomright' });
-            legend.onAdd = function(map) {
-                const div = L.DomUtil.create('div', 'legend');
-                div.innerHTML = `
-                    <h4>Risk Levels</h4>
-                    <i style="background: #ff4444"></i> High Risk<br>
-                    <i style="background: #ffa500"></i> Medium Risk<br>
-                    <i style="background: #000"></i> Emergency Facility<br>
-                `;
-                return div;
-            };
-            legend.addTo(map);
+            contentContainer.innerHTML = content[tabId];
         }
 
-        // Initialize map on page load
-        window.addEventListener('load', initMap);
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                setActiveTab(tab.dataset.tab);
+            });
+        });
+
+        // Initialize with home content
+        setActiveTab('home');
+
+        // Simulated Weather Updates
+        setInterval(() => {
+            const temp = Math.floor(Math.random() * 5) + 25;
+            const humidity = Math.floor(Math.random() * 10) + 60;
+            const wind = Math.floor(Math.random() * 5) + 10;
+            
+            document.querySelectorAll('.weather-item').forEach((item, index) => {
+                if (index === 0) item.innerHTML = `🌡️ Temperature: ${temp}°C`;
+                if (index === 1) item.innerHTML = `💧 Humidity: ${humidity}%`;
+                if (index === 2) item.innerHTML = `💨 Wind: ${wind} km/h`;
+            });
+        }, 5000);
+        content.map = `
+        <div class="card" style="grid-column: 1/-1;">
+            <h2>Disaster Risk Map</h2>
+            <p class="mb-4">Interactive map showing disaster-prone areas and current risk levels</p>
+            <div id="risk-map"></div>
+        </div>
+    `;
+    content.map = `
+    <div class="card" style="grid-column: 1/-1;">
+        <h2>Disaster Risk Map</h2>
+        <p class="mb-4">Interactive map showing disaster-prone areas and current risk levels</p>
+        <div id="risk-map"></div>
+    </div>
+`;
+
+// Add this function after your existing JavaScript
+function initMap() {
+    // Initialize map
+    const map = L.map('risk-map').setView([20.5937, 78.9629], 5); // Centered on India
+
+    // Add tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Define risk zones data
+    const riskZones = [
+        {
+            center: [19.0760, 72.8777], // Mumbai
+            radius: 50000,
+            risk: 'high',
+            type: 'Flood Risk Zone',
+            details: 'High risk of flooding during monsoon season'
+        },
+        {
+            center: [28.7041, 77.1025], // Delhi
+            radius: 40000,
+            risk: 'medium',
+            type: 'Air Quality Risk Zone',
+            details: 'Moderate to high air pollution levels'
+        },
+        {
+            center: [13.0827, 80.2707], // Chennai
+            radius: 45000,
+            risk: 'high',
+            type: 'Cyclone Risk Zone',
+            details: 'High risk of cyclones during season'
+        },
+        {
+            center: [22.5726, 88.3639], // Kolkata
+            radius: 35000,
+            risk: 'medium',
+            type: 'Flood Risk Zone',
+            details: 'Moderate risk of urban flooding'
+        }
+    ];
+
+    // Define emergency facilities
+    const emergencyFacilities = [
+        {
+            position: [19.0760, 72.8777],
+            title: 'Mumbai Emergency Response Center',
+            type: 'Emergency Response'
+        },
+        {
+            position: [28.7041, 77.1025],
+            title: 'Delhi Disaster Management Office',
+            type: 'Disaster Management'
+        },
+        {
+            position: [13.0827, 80.2707],
+            title: 'Chennai Relief Center',
+            type: 'Relief Center'
+        }
+    ];
+
+    // Add risk zones
+    riskZones.forEach(zone => {
+        const color = zone.risk === 'high' ? '#ff4444' : '#ffa500';
+        const circle = L.circle(zone.center, {
+            color: color,
+            fillColor: color,
+            fillOpacity: 0.2,
+            radius: zone.radius
+        }).addTo(map);
+
+        circle.bindPopup(`
+            <div class="risk-info">
+                <h3>${zone.type}</h3>
+                <p><strong>Risk Level:</strong> ${zone.risk.toUpperCase()}</p>
+                <p>${zone.details}</p>
+            </div>
+        `);
+    });
+
+    // Add emergency facility markers
+    emergencyFacilities.forEach(facility => {
+        const marker = L.marker(facility.position)
+            .addTo(map)
+            .bindPopup(`
+                <div class="risk-info">
+                    <h3>${facility.title}</h3>
+                    <p>Type: ${facility.type}</p>
+                </div>
+            `);
+    });
+
+    // Add legend
+    const legend = L.control({ position: 'bottomright' });
+    legend.onAdd = function(map) {
+        const div = L.DomUtil.create('div', 'legend');
+        div.innerHTML = `
+            <h4>Risk Levels</h4>
+            <i style="background: #ff4444"></i> High Risk<br>
+            <i style="background: #ffa500"></i> Medium Risk<br>
+            <i style="background: #000"></i> Emergency Facility<br>
+        `;
+        return div;
+    };
+    legend.addTo(map);
+
+    // Add real-time weather layer (simulated)
+    const weatherLayer = L.layerGroup().addTo(map);
+    
+    function updateWeatherLayer() {
+        weatherLayer.clearLayers();
+        
+        // Simulate weather conditions
+        const weatherPoints = [
+            { pos: [19.0760, 72.8777], temp: Math.round(25 + Math.random() * 10) },
+            { pos: [28.7041, 77.1025], temp: Math.round(22 + Math.random() * 10) },
+            { pos: [13.0827, 80.2707], temp: Math.round(28 + Math.random() * 10) }
+        ];
+
+        weatherPoints.forEach(point => {
+            L.circle(point.pos, {
+                color: 'transparent',
+                fillColor: '#3388ff',
+                fillOpacity: 0.1,
+                radius: 20000
+            }).bindPopup(`Temperature: ${point.temp}°C`)
+              .addTo(weatherLayer);
+        });
+    }
+
+    // Update weather every 30 seconds
+    updateWeatherLayer();
+    setInterval(updateWeatherLayer, 30000);
+}
+
+// Modify your existing tab click handler to initialize map when map tab is selected
+tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+        setActiveTab(tab.dataset.tab);
+        if (tab.dataset.tab === 'map') {
+            setTimeout(initMap, 100); // Small delay to ensure DOM is ready
+        }
+    });
+});
     </script>
 </body>
 </html>
