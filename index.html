@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DisasterSafe - Emergency Management System</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    <style>
+        #risk-map {
+            height: 600px;
+            width: 100%;
+            border-radius: 8px;
+        }
+
+        .legend {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        }
+
+        .legend i {
+            width: 18px;
+            height: 18px;
+            float: left;
+            margin-right: 8px;
+            opacity: 0.7;
+        }
+
+        .risk-info {
+            padding: 6px 8px;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="card" style="grid-column: 1/-1;">
+        <h2>Disaster Risk Map</h2>
+        <p class="mb-4">Interactive map showing disaster-prone areas and current risk levels. You can search for cities and view detailed risk zones.</p>
+        <div id="risk-map"></div>
+    </div>
+
+    <script>
+        // Initialize the map
+        function initMap() {
+            const map = L.map('risk-map').setView([20.5937, 78.9629], 5); // Centered on India
+
+            // Add tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Define risk zones data with more details
+            const riskZones = [
+                {
+                    center: [19.0760, 72.8777], // Mumbai
+                    radius: 50000,
+                    risk: 'high',
+                    type: 'Flood Risk Zone',
+                    details: 'High risk of flooding during monsoon season',
+                    additionalRisks: ['Cyclone Risk', 'High Air Pollution'],
+                    facilities: ['Mumbai Emergency Response Center']
+                },
+                {
+                    center: [28.7041, 77.1025], // Delhi
+                    radius: 40000,
+                    risk: 'medium',
+                    type: 'Air Quality Risk Zone',
+                    details: 'Moderate to high air pollution levels',
+                    additionalRisks: ['Heatwave Risk', 'Earthquake Risk'],
+                    facilities: ['Delhi Disaster Management Office']
+                },
+                {
+                    center: [13.0827, 80.2707], // Chennai
+                    radius: 45000,
+                    risk: 'high',
+                    type: 'Cyclone Risk Zone',
+                    details: 'High risk of cyclones during season',
+                    additionalRisks: ['Flood Risk', 'Storm Surge Risk'],
+                    facilities: ['Chennai Relief Center']
+                },
+                {
+                    center: [22.5726, 88.3639], // Kolkata
+                    radius: 35000,
+                    risk: 'medium',
+                    type: 'Flood Risk Zone',
+                    details: 'Moderate risk of urban flooding',
+                    additionalRisks: ['Cyclone Risk'],
+                    facilities: ['Kolkata Disaster Management Center']
+                }
+            ];
+
+            // Add risk zones to the map
+            riskZones.forEach(zone => {
+                const color = zone.risk === 'high' ? '#ff4444' : '#ffa500';
+                const circle = L.circle(zone.center, {
+                    color: color,
+                    fillColor: color,
+                    fillOpacity: 0.2,
+                    radius: zone.radius
+                }).addTo(map);
+
+                circle.bindPopup(`
+                    <div class="risk-info">
+                        <h3>${zone.type}</h3>
+                        <p><strong>Risk Level:</strong> ${zone.risk.toUpperCase()}</p>
+                        <p>${zone.details}</p>
+                        <p><strong>Additional Risks:</strong> ${zone.additionalRisks.join(', ')}</p>
+                        <p><strong>Emergency Facilities:</strong> ${zone.facilities.join(', ')}</p>
+                    </div>
+                `);
+            });
+
+            // Add search functionality
+            const geocoder = L.Control.Geocoder.nominatim();
+            const searchControl = new L.Control.Geocoder({
+                geocoder: geocoder
+            }).addTo(map);
+
+            // Add legend
+            const legend = L.control({ position: 'bottomright' });
+            legend.onAdd = function(map) {
+                const div = L.DomUtil.create('div', 'legend');
+                div.innerHTML = `
+                    <h4>Risk Levels</h4>
+                    <i style="background: #ff4444"></i> High Risk<br>
+                    <i style="background: #ffa500"></i> Medium Risk<br>
+                    <i style="background: #000"></i> Emergency Facility<br>
+                `;
+                return div;
+            };
+            legend.addTo(map);
+        }
+
+        // Initialize map on page load
+        window.addEventListener('load', initMap);
+    </script>
+</body>
+</html>
